@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مشغل IPTV احترافي</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.14/hls.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Tahoma', 'Arial', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+      color: #fff;
+      padding: 20px;
+      direction: rtl;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #ff6b00;
+    }
+    
+    header h1 {
+      font-size: 2.5em;
+      color: #ff6b00;
+      text-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
+      margin-bottom: 10px;
+    }
+    
+    .status {
+      font-size: 0.95em;
+      color: #66ff66;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .player-section {
+      background: #111;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    }
+    
+    video {
+      width: 100%;
+      border-radius: 8px;
+      background: #000;
+      display: block;
+      aspect-ratio: 16/9;
+    }
+    
+    .channel-info {
+      margin-top: 15px;
+      padding: 15px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      border-right: 4px solid #ff6b00;
+    }
+    
+    .channel-info h3 {
+      color: #ff6b00;
+      margin-bottom: 8px;
+      font-size: 1.1em;
+    }
+    
+    .channel-info p {
+      color: #aaa;
+      font-size: 0.9em;
+      line-height: 1.6;
+    }
+    
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .channels-list {
+      background: #111;
+      border-radius: 12px;
+      padding: 15px;
+      max-height: 700px;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    }
+    
+    .channels-list h3 {
+      color: #ff6b00;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+      border-bottom: 2px solid #ff6b00;
+      padding-bottom: 10px;
+    }
+    
+    .channel-count {
+      color: #aaa;
+      font-size: 0.85em;
+      margin-top: -12px;
+      margin-bottom: 15px;
+    }
+    
+    .channel {
+      cursor: pointer;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      background: #1a1a1a;
+      border-right: 3px solid #333;
+      transition: all 0.3s ease;
+      font-size: 0.95em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .channel:hover {
+      background: #222;
+      border-right-color: #ff6b00;
+      padding-right: 15px;
+    }
+    
+    .channel.active {
+      background: #ff6b00;
+      color: #000;
+      border-right-color: #ff9933;
+      font-weight: bold;
+    }
+    
+    .filters {
+      background: #111;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    }
+    
+    .filters h4 {
+      color: #ff6b00;
+      margin-bottom: 12px;
+      font-size: 1em;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #ff6b00;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #ff6b00;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      font-size: 0.95em;
+    }
+    
+    button:hover {
+      background: #ff9933;
+      transform: translateY(-2px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .quality-selector {
+      background: #111;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    }
+    
+    .quality-selector h4 {
+      color: #ff6b00;
+      margin-bottom: 12px;
+      font-size: 1em;
+    }
+    
+    .quality-btn {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.9em;
+    }
+    
+    .quality-btn:hover {
+      border-color: #ff6b00;
+    }
+    
+    .quality-btn.active {
+      background: #ff6b00;
+      color: #000;
+      border-color: #ff6b00;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #ff6b00;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff9933;
+    }
+    
+    @media (max-width: 1024px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      
+      header h1 {
+        font-size: 1.8em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📺 مشغل IPTV احترافي</h1>
+      <div class="status">✓ مشغل متقدم مع دعم HLS و TS</div>
+    </header>
+    
+    <div class="main-content">
+      <div class="player-section">
+        <video id="player" controls autoplay></video>
+        <div class="channel-info">
+          <h3 id="currentChannel">🎥 اختر قناة للبدء</h3>
+          <p id="channelDetails">انتظر اختيار قناة...</p>
+        </div>
+      </div>
+      
+      <div class="sidebar">
+        <div class="filters">
+          <h4>🔍 البحث</h4>
+          <input type="text" id="searchInput" placeholder="ابحث عن قناة...">
+          <button onclick="loadChannels()">🔄 تحديث</button>
+        </div>
+        
+        <div class="quality-selector">
+          <h4>⚙️ الجودة</h4>
+          <div id="qualityButtons"></div>
+        </div>
+        
+        <div class="channels-list">
+          <h3>قائمة القنوات</h3>
+          <div class="channel-count" id="channelCount"></div>
+          <div id="channels">جاري التحميل...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allChannels = [];
+    let filteredChannels = [];
+    let currentPlayingChannel = null;
+    let hls = null;
+    
+    const channelsData = `#EXTM3U
+#EXTINF:-1,beINSports-fr1
+http://iptv.am000.tv:8000/live/add17/add17/16.ts
+#EXTINF:-1,beINSports-fr2
+http://iptv.am000.tv:8000/live/add17/add17/17.ts
+#EXTINF:-1,BEINSPORTS-FR3
+http://iptv.am000.tv:8000/live/add17/add17/566.ts
+#EXTINF:-1,Alkas-1
+http://iptv.am000.tv:8000/live/add17/add17/73.ts
+#EXTINF:-1,Alkas-2
+http://iptv.am000.tv:8000/live/add17/add17/405.ts
+#EXTINF:-1,Alkas-3
+http://iptv.am000.tv:8000/live/add17/add17/104.ts
+#EXTINF:-1,Alkas-4
+http://iptv.am000.tv:8000/live/add17/add17/315.ts
+#EXTINF:-1,AD-Sports1
+http://iptv.am000.tv:8000/live/add17/add17/89.ts
+#EXTINF:-1,AD-SPORTS2
+http://iptv.am000.tv:8000/live/add17/add17/114.ts
+#EXTINF:-1,AD-Sports3
+http://iptv.am000.tv:8000/live/add17/add17/90.ts
+#EXTINF:-1,DUBAISPORT1
+http://iptv.am000.tv:8000/live/add17/add17/648.ts
+#EXTINF:-1,DubaiSport-3
+http://iptv.am000.tv:8000/live/add17/add17/646.ts
+#EXTINF:-1,DUBAISPORT-4
+http://iptv.am000.tv:8000/live/add17/add17/647.ts
+#EXTINF:-1,EUROSPORT-eng
+http://iptv.am000.tv:8000/live/add17/add17/357.ts
+#EXTINF:-1,MBCProSports1
+http://iptv.am000.tv:8000/live/add17/add17/40.ts
+#EXTINF:-1,MBCProSports2
+http://iptv.am000.tv:8000/live/add17/add17/39.ts
+#EXTINF:-1,osn-yahala-hd
+http://iptv.am000.tv:8000/live/add17/add17/383.ts
+#EXTINF:-1,OSN-CINEMA1
+http://iptv.am000.tv:8000/live/add17/add17/153.ts
+#EXTINF:-1,OSN-MOVIES-ACTION
+http://iptv.am000.tv:8000/live/add17/add17/26.ts
+#EXTINF:-1,OSN-MOVIES-HD
+http://iptv.am000.tv:8000/live/add17/add17/25.ts
+#EXTINF:-1,OSN-MOVIES-DRAMA
+http://iptv.am000.tv:8000/live/add17/add17/19.ts
+#EXTINF:-1,Bein-Movies1
+http://iptv.am000.tv:8000/live/add17/add17/387.ts
+#EXTINF:-1,Bein-Movies2
+http://iptv.am000.tv:8000/live/add17/add17/343.ts
+#EXTINF:-1,Bein-Movies3
+http://iptv.am000.tv:8000/live/add17/add17/534.ts
+#EXTINF:-1,EUROSPORT-1
+http://iptv.am000.tv:8000/live/add17/add17/149.ts
+#EXTINF:-1,EUROSPORT-FR
+http://iptv.am000.tv:8000/live/add17/add17/150.ts
+#EXTINF:-1,Sharjah-Sport
+http://iptv.am000.tv:8000/live/add17/add17/127.ts
+#EXTINF:-1,BeinSport-Sd1
+http://iptv.am000.tv:8000/live/add17/add17/293.ts
+#EXTINF:-1,BeinSport-Sd2
+http://iptv.am000.tv:8000/live/add17/add17/294.ts
+#EXTINF:-1,BeinSport-Sd3
+http://iptv.am000.tv:8000/live/add17/add17/295.ts
+#EXTINF:-1,BeinSport-Sd4
+http://iptv.am000.tv:8000/live/add17/add17/296.ts
+#EXTINF:-1,BeinSport-Sd5
+http://iptv.am000.tv:8000/live/add17/add17/297.ts
+#EXTINF:-1,BeinSport-Sd6
+http://iptv.am000.tv:8000/live/add17/add17/298.ts
+#EXTINF:-1,BeinSport-Sd7
+http://iptv.am000.tv:8000/live/add17/add17/299.ts
+#EXTINF:-1,BeinSport-Sd8
+http://iptv.am000.tv:8000/live/add17/add17/300.ts
+#EXTINF:-1,BeinSport-Sd9
+http://iptv.am000.tv:8000/live/add17/add17/301.ts
+#EXTINF:-1,BeinSport-Sd10
+http://iptv.am000.tv:8000/live/add17/add17/302.ts
+#EXTINF:-1,EN:BeinSport-11
+http://iptv.am000.tv:8000/live/add17/add17/575.ts
+#EXTINF:-1,EN:BeinSport-12
+http://iptv.am000.tv:8000/live/add17/add17/577.ts
+#EXTINF:-1,FR:BEINSPORT-13
+http://iptv.am000.tv:8000/live/add17/add17/632.ts
+#EXTINF:-1,FR:BEINSPORT-14
+http://iptv.am000.tv:8000/live/add17/add17/633.ts
+#EXTINF:-1,FR:BEINSPORT-15
+http://iptv.am000.tv:8000/live/add17/add17/634.ts
+#EXTINF:-1,FR:BEINSPORT-16
+http://iptv.am000.tv:8000/live/add17/add17/635.ts
+#EXTINF:-1,Sky-Atlantic
+http://iptv.am000.tv:8000/live/add17/add17/441.ts
+#EXTINF:-1,SkySport-1
+http://iptv.am000.tv:8000/live/add17/add17/443.ts`;
+    
+    function parseM3U(content) {
+      const channels = [];
+      const lines = content.split('\n');
+      let currentInfo = null;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line.startsWith('#EXTINF:')) {
+          const nameMatch = line.split(',').pop();
+          currentInfo = { name: nameMatch || 'قناة بدون اسم' };
+        } else if (line.startsWith('http') && currentInfo) {
+          channels.push({
+            ...currentInfo,
+            url: line,
+            type: line.includes('.m3u8') ? 'hls' : 'ts'
+          });
+          currentInfo = null;
+        }
+      }
+      return channels;
+    }
+    
+    function playStream(url, type) {
+      const video = document.getElementById('player');
+      
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+      
+      if (type === 'hls' && Hls.isSupported()) {
+        hls = new Hls({
+          lowLatencyMode: true,
+          enableWorker: true
+        });
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          updateQualityButtons();
+          video.play();
+        });
+      } else {
+        video.src = url;
+        video.play();
+      }
+    }
+    
+    function updateQualityButtons() {
+      const qualityDiv = document.getElementById('qualityButtons');
+      qualityDiv.innerHTML = '';
+      
+      if (!hls || !hls.levels || hls.levels.length === 0) {
+        qualityDiv.innerHTML = '<p style="color: #aaa; text-align: center;">جودة واحدة فقط</p>';
+        return;
+      }
+      
+      const levels = hls.levels;
+      
+      const autoBtn = document.createElement('button');
+      autoBtn.className = 'quality-btn active';
+      autoBtn.textContent = '🔄 تلقائي';
+      autoBtn.onclick = () => {
+        hls.currentLevel = -1;
+        document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+        autoBtn.classList.add('active');
+      };
+      qualityDiv.appendChild(autoBtn);
+      
+      levels.forEach((level, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quality-btn';
+        btn.textContent = `📺 ${level.height}p`;
+        btn.onclick = () => {
+          hls.currentLevel = idx;
+          document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        };
+        qualityDiv.appendChild(btn);
+      });
+    }
+    
+    function loadChannels() {
+      const channels = parseM3U(channelsData);
+      
+      const uniqueChannels = [];
+      const seenNames = new Set();
+      
+      for (const ch of channels) {
+        if (!seenNames.has(ch.name)) {
+          uniqueChannels.push(ch);
+          seenNames.add(ch.name);
+        }
+      }
+      
+      allChannels = uniqueChannels;
+      filteredChannels = [...allChannels];
+      
+      document.getElementById('channelCount').textContent = `${allChannels.length} قناة متاحة`;
+      displayChannels();
+      
+      if (allChannels.length > 0) {
+        playChannelByIndex(0);
+      }
+    }
+    
+    function displayChannels() {
+      const container = document.getElementById('channels');
+      
+      if (filteredChannels.length === 0) {
+        container.innerHTML = '<p style="color: #aaa; padding: 20px;">لا توجد نتائج</p>';
+        return;
+      }
+      
+      container.innerHTML = filteredChannels.map((ch, idx) => `
+        <div class="channel ${currentPlayingChannel === idx ? 'active' : ''}" onclick="playChannelByIndex(${idx})">
+          ${ch.name} ${ch.type === 'hls' ? '📡' : '📺'}
+        </div>
+      `).join('');
+    }
+    
+    function playChannelByIndex(index) {
+      if (index < 0 || index >= filteredChannels.length) return;
+      
+      const channel = filteredChannels[index];
+      playStream(channel.url, channel.type);
+      document.title = channel.name + ' | IPTV';
+      
+      document.getElementById('currentChannel').textContent = '🎥 ' + channel.name;
+      document.getElementById('channelDetails').textContent = `📡 نوع: ${channel.type.toUpperCase()} | قناة ${index + 1} من ${filteredChannels.length}`;
+      
+      currentPlayingChannel = index;
+      displayChannels();
+    }
+    
+    document.getElementById('searchInput').addEventListener('keyup', (e) => {
+      const query = e.target.value.toLowerCase();
+      
+      if (query === '') {
+        filteredChannels = [...allChannels];
+      } else {
+        filteredChannels = allChannels.filter(ch => 
+          ch.name.toLowerCase().includes(query)
+        );
+      }
+      
+      currentPlayingChannel = null;
+      displayChannels();
+    });
+    
+    window.addEventListener('load', () => {
+      loadChannels();
+    });
+  </script>
+</body>
+</html>`;
